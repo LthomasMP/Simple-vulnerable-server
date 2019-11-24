@@ -20,12 +20,9 @@ int main(int argc, char const *argv[])
 
     // Credentials
     uint8_t identification_state = 0;
-    char buffer [32] = {0};
-    char username[32] = {0};
-    char password[32] = {0};
-
-    // Shell
-    char command[32] = {0};
+    char buffer [BUFFER] = {0};
+    char username[BUFFER] = {0};
+    char password[BUFFER] = {0};
 
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
@@ -69,10 +66,11 @@ int main(int argc, char const *argv[])
     }
     else if (strcmp(username, "admin\n") == 0 && strcmp(password, "dojo\n") == 0){
         send(new_socket, "Hi admin!\n", 10, 0);
-        identification_state = 2;    }
+        identification_state = 2;
+    }
     else {
         send(new_socket, "Bad authentication\n", 20, 0);
         identification_state = 0;
-        return 0;
     }
+    return 0;
 }
