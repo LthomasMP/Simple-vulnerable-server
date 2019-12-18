@@ -1,76 +1,77 @@
-
-// Server side C/C++ program to demonstrate Socket programming 
 #include <unistd.h> 
-#include <stdio.h> 
-#include <sys/socket.h> 
-#include <stdlib.h> 
-#include <netinet/in.h> 
+#include <stdio.h>
+#include <stdlib.h>l
 #include <string.h>
+#include "server.h"
 
-#define PORT 12345
-#define BUFFER 32
-
-int main(int argc, char const *argv[])
+#define BUFFER 64
+int main(void)
 {
-    // Connection
-    int server_fd, new_socket, valread;
-    struct sockaddr_in address; 
-    int opt = 1;
-    int addrlen = sizeof(address);
+  while(1){
+    server();
+  }
+}
 
-    // Credentials
-    uint8_t identification_state = 0;
-    char buffer [BUFFER] = {0};
-    char username[BUFFER] = {0};
-    char password[BUFFER] = {0};
+void server(){
+  // Credentials
+  int id = 0;
+  char username[BUFFER];
+  char password[BUFFER];
 
-    // Creating socket file descriptor
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-    { 
-        perror("socket failed"); 
-        exit(EXIT_FAILURE); 
-    }
+  printf("%s", "mention your identity please\n");
+  gets(username);
+  printf("%s", "password:\n");
+  gets(password);
 
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY; 
-    address.sin_port = htons( PORT );
+  id = check_credentials(username, password);
 
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0)
-    {
-        perror("bind failed");
-        exit(EXIT_FAILURE);
-    }
-    if (listen(server_fd, 3) < 0) 
-    {
-        perror("listen"); 
-        exit(EXIT_FAILURE); 
-    } 
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
-    {
-        perror("accept");
-        exit(EXIT_FAILURE); 
-    }
+  switch (id)
+  {
+    case 1:
+      printf("%s", "Hi la Ruche!\n");
+      break;
+    case 2:
+      printf("%s", "Hi admin!\n");
+      break;
+    default:
+      printf("%s", "Bad authentication\n");
+      break;
+  }
+}
 
-    send(new_socket, "decline you identity please\n", 28, 0);
-    valread = read( new_socket , buffer, BUFFER);
-
-    strcpy(buffer, username);
-
-    send(new_socket, "password:\n", 11, 0);
-    valread = read( new_socket, password, BUFFER);
-
-
-    if (strcmp(username, "la_ruche\n") == 0 && strcmp(password, "azerty\n") == 0){
-        send(new_socket, "Hi la Ruche!\n", 13, 0);
-        identification_state = 1;
-    }
-    else if (strcmp(username, "admin\n") == 0 && strcmp(password, "dojo\n") == 0){
-        send(new_socket, "Hi admin!\n", 10, 0);
-        identification_state = 2;
+int check_credentials(char* username, char* password) {
+  if (strcmp(username,"la_ruche") == 0) {
+    char* ciphered = cipher_passwd(password);
+    if (strcmp(cipher_passwd(password), "#8'06;") == 0) {
+      free(ciphered);
+      return 1;
     }
     else {
-        send(new_socket, "Bad authentication\n", 20, 0);
-        identification_state = 0;
+      free(ciphered);
+      return -1;
     }
-    return 0;
+  }
+  else if (strcmp(username, "admin") == 0){
+    char* ciphered = cipher_passwd(password);
+    if (strcmp(ciphered, "&-(-spqc") == 0) {
+      free(ciphered);
+      return 2;
+    }
+    else {
+      free(ciphered);
+      return -1;
+    }
+  }
+  else {
+    return -1;
+  }
+}
+
+char* cipher_passwd(char* passwd)
+{
+    char* output = malloc(strlen(passwd)*sizeof(char));
+    for (int i = 0; i < strlen(passwd); i++) {
+      output[i] = passwd[i] ^ 0x42;
+    }
+    return output;
 }
